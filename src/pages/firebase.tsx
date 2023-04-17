@@ -1,5 +1,5 @@
 import { Flex, Input, Text, Button } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { db } from "../services/firebase";
 import {
   addDoc,
@@ -14,9 +14,10 @@ import { useRouter } from "next/router";
 export default function FirebaseTest() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [users, setUsers] = useState<any>();
+  const [audioURL, setAudioURL] = useState<any>("");
+  const [memes, setMemes] = useState<any>();
 
-  const userCollectionRef = collection(db, "users");
+  const userCollectionRef = collection(db, "memes");
 
   const Router = useRouter();
 
@@ -33,7 +34,7 @@ export default function FirebaseTest() {
   useEffect(() => {
     const getUsers = async () => {
       const data = await getDocs(userCollectionRef);
-      setUsers(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      setMemes(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
     };
     getUsers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,10 +45,29 @@ export default function FirebaseTest() {
     await deleteDoc(userDoc);
     Router.reload();
   }
+
+  const audioRef = useRef<any>();
+  const playaudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play();
+    } else {
+      ("");
+      // Throw error
+    }
+  };
+
+  function blabla(audio: any) {
+    setAudioURL(audio);
+    playaudio();
+  }
+
   return (
     <Flex w="100%" align="center" p="5rem">
       <Flex direction="column" align="center" w="full">
-        <Input
+        {/* <Button onClick={playaudio}>Ouvir</Button> */}
+
+        <audio src={audioURL} ref={audioRef} />
+        {/* <Input
           w="50%"
           placeholder="Nome..."
           value={name}
@@ -62,27 +82,26 @@ export default function FirebaseTest() {
           onChange={(e) => {
             setEmail(e.target.value);
           }}
-        />
+        /> */}
         <Button onClick={createUser} mb="2rem">
           Criar usuario novo
         </Button>
-        {console.log("Users que vieram do firebase", users)}
+        {console.log("Users que vieram do firebase", memes)}
         <Text color="red" fontSize="26px">
           Lista de usuários
         </Text>
-        {users &&
-          users.map((user: any) => {
+        {memes &&
+          memes.map((meme: any) => {
             return (
-              <Flex key={user.id} direction="column">
-                <Text>{user.name}</Text>
-                <Text>{user.email}</Text>
-                <Text>{user.role}</Text>
+              <Flex key={meme.id} direction="column">
+                <Text>{meme.nome}</Text>
+                <Text>{meme.value}</Text>
                 <Button
                   onClick={() => {
-                    deleteUser(user.id);
+                    blabla(meme.value);
                   }}
                 >
-                  Deletar
+                  Ouvir
                 </Button>
               </Flex>
             );
