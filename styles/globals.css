@@ -23,3 +23,10 @@ a {
     background: black;
   }
 }
+
+.rotacionar {
+  transition: transform 0.7s ease-in-out;
+}
+.rotacionar:hover {
+  transform: rotate(360deg);
+}

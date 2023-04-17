@@ -1,497 +1,121 @@
+import { Flex, Input, Text, Button, Img } from "@chakra-ui/react";
+import { useEffect, useRef, useState } from "react";
+import { db } from "../services/firebase";
 import {
-  Flex,
-  Button,
-  Text,
-  useBreakpointValue,
-  Input,
-  InputGroup,
-  InputLeftAddon,
-  InputLeftElement,
-  InputRightElement,
-  Stack,
-  Image,
-  useToast,
-  useDisclosure,
-  Toast,
-  IconButton,
-  Icon,
-  Box,
-} from "@chakra-ui/react";
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  getFirestore,
+} from "firebase/firestore";
 import { useRouter } from "next/router";
-import LayoutDesk from "../Layouts/Layout";
-// import Lottie from "react-lottie";
-import animationData from "../animations/login.json";
-import { useAuth } from "../contexts/AuthContext";
-import { AiOutlineUser, AiOutlineEyeInvisible } from "react-icons/ai";
-import { BsShieldLock } from "react-icons/bs";
-import { FcGoogle } from "react-icons/fc";
-import {
-  signInWithPopup,
-  GoogleAuthProvider,
-  createUserWithEmailAndPassword,
-  User,
-} from "firebase/auth";
-import { auth } from "../services/firebase";
-import { useState } from "react";
 
-import SignUp from "../components/SignUp";
-import { parseCookies } from "nookies";
+export default function FirebaseTest() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [audioURL, setAudioURL] = useState<any>("");
+  const [memes, setMemes] = useState<any>();
 
-import {
-  MotionFlex,
-  animationFlex,
-  itemAnimation,
-  InputMotion,
-  inputAnimation,
-} from "../../styles/animation";
-export default function HomeLogin() {
-  const toast = useToast({
-    duration: 5000,
-    isClosable: true,
-  });
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>();
+  const userCollectionRef = collection(db, "memes");
 
-  const isMobileVersion = useBreakpointValue({
-    base: true,
-    sm: true,
-    md: false,
-    lg: false,
-  });
+  const Router = useRouter();
 
-  const defaultOptions = {
-    loop: true,
-    autoplay: true,
-    animationData: animationData,
-    rendererSettings: {
-      preserveAspectRatio: "xMidYMid slice",
-    },
-  };
-  const { user, signInWithGoogle, signInEmailPassword, isAuthenticated } =
-    useAuth();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  //Essa função assíncrona é responsável por criar um novo usuário no banco de dados utilizando a função "addDoc" em uma referência de coleção de usuários ("userCollectionRef"), passando como parâmetro um objeto com os campos "name" e "email".
+  async function createUser() {
+    const user = await addDoc(userCollectionRef, {
+      name,
+      email,
+    });
 
-  const Toast = useToast({
-    position: "bottom",
-    isClosable: true,
-    duration: 2500,
-    containerStyle: {
-      color: "white",
-    },
-  });
+    Router.reload();
+  }
 
-  const CLIENT_TOKEN: any = process.env.NEXT_PUBLIC_CLIENT_TOKEN;
+  useEffect(() => {
+    const getUsers = async () => {
+      const data = await getDocs(userCollectionRef);
+      setMemes(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    };
+    getUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const cookies = parseCookies();
+  async function deleteUser(id: any) {
+    const userDoc = doc(db, "users", id);
+    await deleteDoc(userDoc);
+    Router.reload();
+  }
 
-  const userToken = cookies[CLIENT_TOKEN];
-
-  async function handleLogin(email: string, password: string) {
-    await signInEmailPassword(email, password);
-
-    console.log("isLoading", loading);
-
-    if (email == "" || null) {
-      setLoading(true);
-
-      toast.closeAll();
-      toast({
-        title: "Verifique o e-mail",
-        description: "O campo de e-mail esta vazio.",
-        status: "error",
-      });
-      setLoading(false);
-    } else if (password == "" || null) {
-      setLoading(true);
-      toast.closeAll();
-      toast({
-        title: "Verifique a senha.",
-        description: "O campo de senha esta vazio.",
-        status: "error",
-      });
-      setLoading(false);
+  const audioRef = useRef<any>();
+  const playaudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play();
     } else {
-      setLoading(true);
-      const response = await signInEmailPassword(email, password);
-      if (response !== undefined) {
-        toast.closeAll();
-        toast({
-          title: "Dados inválidos",
-          description: "Email ou senha incorretos",
-          status: "error",
-        });
-      } else {
-        toast.closeAll();
-        toast({
-          title: "Login realizado com sucesso",
-          description: "Bem-vindo à Dashboard da Pneufree!",
-          status: "success",
-        });
-      }
-      setLoading(false);
+      ("");
+      // Throw error
     }
+  };
+
+  function blabla(audio: any) {
+    setAudioURL(audio);
+    playaudio();
   }
 
   return (
-    <>
-      {isMobileVersion ? (
-        <>
-          <Flex
-            bgColor="#EBEBEB"
-            minHeight="100vh"
-            direction="column"
-            p="1rem"
-            justify="center"
-          >
-            <MotionFlex
-              initial="hidden"
-              animate="visible"
-              variants={itemAnimation}
-              justify="center"
-              // data-aos="fade-up"
-              bgColor="#021C45"
-              borderRadius="10px"
-              direction="column"
-              minHeight="full"
-              // bgRepeat="no-repeat"
-              // bgAttachment="fixed"
-              // bgPosition="center"
-              // bgBlendMode="soft-light"
-              // bgImage="url(/Image/piggy1.png)"
-            >
-              {/* <Flex> {props.children}</Flex> */}
-              {/* <NavBar /> */}
+    <Flex w="100%" h="100vh" align="center" p="5rem" bgColor="black">
+      <Flex direction="column" align="center" w="full">
+        {/* <Button onClick={playaudio}>Ouvir</Button> */}
 
-              <MotionFlex
-                variants={inputAnimation}
-                initial="hidden"
-                animate="visible"
-                direction="column"
-                align="center"
-                p="1rem"
-              >
-                {/* <Lottie options={defaultOptions} /> */}
-                <Image src="/Image/bgimagelogin.gif" alt="" />
-                <Text
-                  fontSize="24px"
-                  color="white"
-                  fontWeight="bold"
-                  alignSelf="start"
-                >
-                  Seja bem-vindo!
+        <audio src={audioURL} ref={audioRef} />
+        {/* <Input
+          w="50%"
+          placeholder="Nome..."
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+          }}
+        />
+        <Input
+          w="40%"
+          placeholder="Email..."
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+          }}
+        /> */}
+        {/* <Button onClick={createUser} mb="2rem">
+          Criar usuario novo
+        </Button> */}
+        {console.log("Users que vieram do firebase", memes)}
+        <Img
+          src="Image/murilogordo.png"
+          className="rotacionar"
+          mb="4rem"
+          w="20%"
+        />
+        <Text color="red" fontSize="26px">
+          THE GREATEST PNEUFREE HITS
+        </Text>
+        {memes &&
+          memes.map((meme: any) => {
+            return (
+              <Flex key={meme.id} align="center" mb="1rem">
+                <Text mr="1rem" color="green">
+                  {meme.nome}
                 </Text>
-                <Text
-                  fontSize="16px"
-                  color="gray.300"
-                  fontWeight="medium"
-                  alignSelf="start"
-                >
-                  Faça o login para começar.
-                </Text>
-                <InputGroup mt="2rem" w="full" variant="solid" size="md">
-                  <InputLeftElement>
-                    <AiOutlineUser color="gray.300" />
-                  </InputLeftElement>
-                  <Input
-                    borderRadius="15px"
-                    placeholder="Digite seu email."
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                    }}
-                  />
-                </InputGroup>
-                <InputGroup w="full" variant="solid" size="md" mt="1rem">
-                  <InputLeftElement>
-                    <BsShieldLock color="gray.300" />
-                  </InputLeftElement>
-                  <Input
-                    borderRadius="15px"
-                    placeholder="Digite sua senha. "
-                    variant="solid"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                    }}
-                  />
-                </InputGroup>
-
-                <Flex
-                  justify="space-evenly"
-                  w="full"
-                  mt="1rem"
-                  direction="column"
-                >
-                  {/* <Button mt="1rem" size="sm" w="100px">
-                    Cadastre-se
-                    
-                  </Button> */}
-                  <Button
-                    borderWidth="1px"
-                    mt="1rem"
-                    h="40px"
-                    borderRadius="10px"
-                    bgColor="#011735"
-                    // variant="solid"
-                    colorScheme="#021C45"
-                    color="white"
-                    onClick={() => {
-                      handleLogin(email, password);
-                    }}
-                  >
-                    Entrar
-                  </Button>
-
-                  <Text
-                    mt="1.5rem"
-                    align="center"
-                    color="gray.300"
-                    fontSize="13px"
-                  >
-                    Você também pode se conectar com:
-                  </Text>
-                  {/* <IconButton>
-                    <Text>teste</Text>
-                  </IconButton> */}
-
-                  <Button
-                    alignContent="end"
-                    h="40px"
-                    justifyContent="center"
-                    mt="1.5rem"
-                    bgColor="#011735"
-                    borderRadius="10px"
-                    colorScheme="#021C45"
-                    color="white"
-                    variant="outline"
-                    onClick={signInWithGoogle}
-                    aria-label={"Entrar com google"}
-                  >
-                    {<FcGoogle size="25px" />}
-                    <Text alignSelf="center" ml="1rem">
-                      Entrar com Conta Google
-                    </Text>
-                  </Button>
-
-                  {/* const { isOpen, onOpen, onClose } = useDisclosure(); */}
-
-                  <Button
-                    colorScheme="#021C45"
-                    mt="1rem"
-                    borderRadius="10px"
-                    // onClick={handleCreateUser}
-                    onClick={onOpen}
-                  >
-                    {" "}
-                    <Text as="u" fontSize="14px" fontWeight="medium">
-                      Criar uma conta
-                    </Text>
-                  </Button>
-
-                  <SignUp isOpen={isOpen} onClose={onClose} />
-                </Flex>
-              </MotionFlex>
-            </MotionFlex>
-          </Flex>
-          {/* <LayoutMob></LayoutMob> */}
-        </>
-      ) : (
-        <>
-          <Flex
-            bgColor="#EBEBEB"
-            w="full"
-            h="100vh"
-            align="center"
-            justify="center"
-          >
-            <MotionFlex
-              boxShadow="lg"
-              rounded="lg"
-              initial="hidden"
-              animate="visible"
-              variants={itemAnimation}
-              borderRadius="15px"
-              direction="column"
-              align="center"
-              justify="center"
-              px="3rem"
-              py="1rem"
-              bgColor="#FFFFFF"
-              w="35%"
-            >
-              {/* <Lottie options={defaultOptions} /> */}
-              <MotionFlex
-                justify="start"
-                direction="column"
-                variants={itemAnimation}
-                initial="hidden"
-                animate="visible"
-              >
-                <Image
-                  src="/Image/login.svg"
-                  alt=""
-                  mt="-1rem"
-                  w="227px"
-                  h="227px"
-                />
-
-                <Text
-                  fontSize="25px"
-                  color="#081F49"
-                  fontWeight="bold"
-                  alignSelf="center"
-                >
-                  Seja bem-vindo!
-                </Text>
-
-                <Text
-                  opacity="45%"
-                  fontSize="14px"
-                  color="black"
-                  fontWeight="medium"
-                  alignSelf="center"
-                >
-                  Faça o login para começar.
-                </Text>
-              </MotionFlex>
-              <InputMotion
-                variants={inputAnimation}
-                initial="hidden"
-                animate="visible"
-                mt="1rem"
-                w="full"
-                variant="solid"
-                size="md"
-              >
-                <InputLeftElement>
-                  <AiOutlineUser opacity="45%" />
-                </InputLeftElement>
-                <Input
-                  opacity="70%"
-                  borderColor="gray.300"
-                  variant="outline"
-                  borderRadius="15px"
-                  placeholder="Digite seu email."
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                  }}
-                />
-              </InputMotion>
-              <InputMotion
-                variants={inputAnimation}
-                initial="hidden"
-                animate="visible"
-                w="full"
-                variant="solid"
-                size="md"
-                mt="1rem"
-              >
-                <InputLeftElement>
-                  <BsShieldLock opacity="45%" />
-                </InputLeftElement>
-                <Input
-                  opacity="70%"
-                  borderColor="gray.300"
-                  variant="outline"
-                  borderRadius="15px"
-                  placeholder="Digite sua senha. "
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                  }}
-                />
-              </InputMotion>
-
-              <MotionFlex
-                variants={inputAnimation}
-                initial="hidden"
-                animate="visible"
-                justify="space-evenly"
-                w="full"
-                direction="column"
-              >
-                {/* <Button mt="1rem" size="sm" w="100px">
-                    Cadastre-se
-                    
-                  </Button> */}
-
+                {/* <Text>{meme.value}</Text> */}
                 <Button
-                  boxShadow="lg"
-                  isLoading={loading}
-                  borderWidth="1px"
-                  mt="1rem"
-                  h="40px"
-                  borderRadius="15px"
-                  bgColor="#4887FA"
-                  // variant="solid"
-                  colorScheme="#021C45"
-                  color="white"
                   onClick={() => {
-                    handleLogin(email, password);
+                    blabla(meme.value);
                   }}
+                  className="rotacionar"
                 >
-                  Entrar
+                  Ouvir
                 </Button>
-
-                <Text
-                  mt="0.5rem"
-                  align="center"
-                  color="gray.300"
-                  fontSize="13px"
-                >
-                  Você também pode se conectar com:
-                </Text>
-                {/* <IconButton>
-                    <Text>teste</Text>
-                  </IconButton> */}
-
-                <Button
-                  alignContent="end"
-                  h="40px"
-                  justifyContent="center"
-                  mt="0.5rem"
-                  // bgColor="#4887FA"
-                  borderRadius="15px"
-                  colorScheme="#021C45"
-                  color="#4887FA"
-                  variant="outline"
-                  onClick={signInWithGoogle}
-                  aria-label={"Entrar com google"}
-                >
-                  {<FcGoogle size="25px" />}
-                  <Text alignSelf="center" ml="1rem">
-                    Entrar com Conta Google
-                  </Text>
-                </Button>
-
-                {/* const { isOpen, onOpen, onClose } = useDisclosure(); */}
-
-                <Button
-                  colorScheme="#021C45"
-                  borderRadius="10px"
-                  // onClick={handleCreateUser}
-                  onClick={onOpen}
-                >
-                  {" "}
-                  <Text
-                    mt="0.5rem"
-                    as="u"
-                    fontSize="14px"
-                    fontWeight="medium"
-                    color="gray.300"
-                  >
-                    Criar uma conta
-                  </Text>
-                </Button>
-
-                <SignUp isOpen={isOpen} onClose={onClose} />
-              </MotionFlex>
-            </MotionFlex>
-          </Flex>
-        </>
-      )}
-    </>
+              </Flex>
+            );
+          })}
+      </Flex>
+    </Flex>
   );
 }
